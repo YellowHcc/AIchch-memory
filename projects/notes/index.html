@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>便签</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .add-btn {
+            display: block;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #fff;
+            border: none;
+            font-size: 30px;
+            color: #667eea;
+            cursor: pointer;
+            margin: 0 auto 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .note {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .note:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .note-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .note-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-btn {
+            background: #f0f0f0;
+        }
+
+        .color-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .delete-btn {
+            background: #ffebee;
+            color: #e53935;
+        }
+
+        .delete-btn:hover {
+            background: #e53935;
+            color: white;
+        }
+
+        .note-content {
+            width: 100%;
+            min-height: 120px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            padding: 60px 20px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .color-picker {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 45px;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .color-picker.show {
+            display: grid;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        /* 便签颜色 */
+        .note.white { background: #ffffff; }
+        .note.yellow { background: #fff9c4; }
+        .note.green { background: #c8e6c9; }
+        .note.blue { background: #bbdefb; }
+        .note.pink { background: #f8bbd9; }
+        .note.purple { background: #e1bee7; }
+        .note.orange { background: #ffe0b2; }
+        .note.cyan { background: #b2ebf2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 我的便签</h1>
+        <button class="add-btn" onclick="addNote()" title="添加便签">+</button>
+        <div class="notes-grid" id="notesContainer"></div>
+    </div>
+
+    <script>
+        // 颜色配置
+        const colors = [
+            { name: 'white', hex: '#ffffff' },
+            { name: 'yellow', hex: '#fff9c4' },
+            { name: 'green', hex: '#c8e6c9' },
+            { name: 'blue', hex: '#bbdefb' },
+            { name: 'pink', hex: '#f8bbd9' },
+            { name: 'purple', hex: '#e1bee7' },
+            { name: 'orange', hex: '#ffe0b2' },
+            { name: 'cyan', hex: '#b2ebf2' }
+        ];
+
+        let notes = [];
+
+        // 从本地存储加载
+        function loadNotes() {
+            const saved = localStorage.getItem('myNotes');
+            if (saved) {
+                notes = JSON.parse(saved);
+            }
+            renderNotes();
+        }
+
+        // 保存到本地存储
+        function saveNotes() {
+            localStorage.setItem('myNotes', JSON.stringify(notes));
+        }
+
+        // 添加新便签
+        function addNote() {
+            const note = {
+                id: Date.now(),
+                content: '',
+                color: 'yellow',
+                date: new Date().toLocaleString('zh-CN')
+            };
+            notes.unshift(note);
+            saveNotes();
+            renderNotes();
+            // 自动聚焦到新便签
+            setTimeout(() => {
+                const textarea = document.querySelector(`[data-id="${note.id}"] .note-content`);
+                if (textarea) textarea.focus();
+            }, 100);
+        }
+
+        // 删除便签
+        function deleteNote(id) {
+            if (confirm('确定要删除这个便签吗？')) {
+                notes = notes.filter(n => n.id !== id);
+                saveNotes();
+                renderNotes();
+            }
+        }
+
+        // 更新便签内容
+        function updateContent(id, content) {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.content = content;
+                note.date = new Date().toLocaleString('zh-CN');
+                saveNotes();
+            }
+        }
+
+        // 更改便签颜色
+        function changeColor(id, colorName) {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.color = colorName;
+                saveNotes();
+                renderNotes();
+            }
+        }
+
+        // 切换颜色选择器
+        function toggleColorPicker(id) {
+            const picker = document.getElementById(`color-picker-${id}`);
+            // 关闭其他打开的颜色选择器
+            document.querySelectorAll('.color-picker').forEach(p => {
+                if (p.id !== `color-picker-${id}`) p.classList.remove('show');
+            });
+            picker.classList.toggle('show');
+        }
+
+        // 渲染所有便签
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            
+            if (notes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>还没有便签，点击上方 + 按钮创建一个吧</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notes.map(note => `
+                <div class="note ${note.color}" data-id="${note.id}">
+                    <div class="note-header">
+                        <span class="note-date">${note.date}</span>
+                        <div class="note-actions">
+                            <button class="note-btn color-btn" onclick="toggleColorPicker(${note.id})" title="更改颜色">🎨</button>
+                            <button class="note-btn delete-btn" onclick="deleteNote(${note.id})" title="删除">✕</button>
+                        </div>
+                    </div>
+                    <div class="color-picker" id="color-picker-${note.id}">
+                        ${colors.map(c => `
+                            <div class="color-option" style="background: ${c.hex}" 
+                                 onclick="changeColor(${note.id}, '${c.name}')" title="${c.name}"></div>
+                        `).join('')}
+                    </div>
+                    <textarea class="note-content" placeholder="写下你的想法..."
+                        oninput="updateContent(${note.id}, this.value)">${note.content}</textarea>
+                </div>
+            `).join('');
+        }
+
+        // 点击外部关闭颜色选择器
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.color-btn') && !e.target.closest('.color-picker')) {
+                document.querySelectorAll('.color-picker').forEach(p => p.classList.remove('show'));
+            }
+        });
+
+        // 初始化
+        loadNotes();
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+name: Auto Backup Memory
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Git
+        run: |
+          git config --global user.name 'Claw Bot'
+          git config --global user.email 'claw@ai.local'
+      
+      - name: Check for changes
+        id: check
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git commit -m "🤖 auto: memory backup $(date +'%Y-%m-%d %H:%M:%S')"
+          git push

@@ -57,16 +57,13 @@ if [ -f "$WORKSPACE/notes.html" ]; then
     echo "  ✓ 已同步 notes.html"
 fi
 
-# 复制调研报告
-if [ -f "$WORKSPACE/财务中台AI最新动态调研报告.md" ]; then
-    cp "$WORKSPACE/财务中台AI最新动态调研报告.md" ./
-    echo "  ✓ 已同步 财务中台AI最新动态调研报告.md"
-fi
-
-if [ -f "$WORKSPACE/财务供应链AI应用调研报告.md" ]; then
-    cp "$WORKSPACE/财务供应链AI应用调研报告.md" ./
-    echo "  ✓ 已同步 财务供应链AI应用调研报告.md"
-fi
+# 复制调研报告（支持多种命名）
+for file in "$WORKSPACE"/*调研报告.md "$WORKSPACE"/*趋势*.md; do
+    if [ -f "$file" ]; then
+        cp "$file" ./
+        echo "  ✓ 已同步 $(basename "$file")"
+    fi
+done
 
 # 提交变更
 git add -A

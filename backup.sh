@@ -18,6 +18,11 @@ if [ ! -d "$REPO_DIR" ]; then
     exit 1
 fi
 
+# 🌱 第一步：整理今日记忆
+echo "🌱 整理今日记忆..."
+cd "$WORKSPACE"
+./skills/memory-gardener/garden.sh today 2>/dev/null || echo "⚠️ 整理记忆跳过或失败"
+
 cd "$REPO_DIR"
 
 # 拉取最新变更（避免冲突）
@@ -37,6 +42,13 @@ fi
 if [ -d "$WORKSPACE/memory" ]; then
     cp -r "$WORKSPACE/memory/"* ./memory/ 2>/dev/null || true
     echo "  ✓ 已同步 memory/ 目录"
+fi
+
+# 复制 skills/memory-gardener
+if [ -d "$WORKSPACE/skills/memory-gardener" ]; then
+    mkdir -p ./skills/memory-gardener
+    cp -r "$WORKSPACE/skills/memory-gardener/"* ./skills/memory-gardener/ 2>/dev/null || true
+    echo "  ✓ 已同步 memory-gardener skill"
 fi
 
 # 复制项目文件
